@@ -1,0 +1,10 @@
+# 플레이어 접속 시 보여줄 메시지를 설정합니다.
+# %player%는 접속한 플레이어의 이름으로 자동 변경됩니다.
+# & 기호로 색상 코드를 사용할 수 있습니다. (예: &a, &b, &c...)
+
+
+join-message: "&l[ &a+ &f&l] %player%"
+join-log-message: "%player%님이 서버에 접속하셨습니다."
+
+quit-message: "&l[ &c- &f&l] %player%"
+quit-logmessage: "%player%님이 서버에서 퇴장하셨습니다."
