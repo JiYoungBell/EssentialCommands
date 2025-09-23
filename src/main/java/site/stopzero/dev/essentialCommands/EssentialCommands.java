@@ -1,17 +1,22 @@
 package site.stopzero.dev.essentialCommands;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import site.stopzero.dev.essentialCommands.commands.PunishmentCommands;
 import site.stopzero.dev.essentialCommands.listeners.JoinQuitMessage;
 
 public final class EssentialCommands extends JavaPlugin {
 
     @Override
     public void onEnable() {
+
         saveDefaultConfig();
 
         getLogger().info("동명타이쿤 EssentialCommands 플러그인이 정상적으로 켜졌습니다.");
 
         getServer().getPluginManager().registerEvents(new JoinQuitMessage(this), this);
+
+        this.getCommand("추방").setExecutor(new PunishmentCommands(this));
+        this.getCommand("밴").setExecutor(new PunishmentCommands(this));
     }
 
     @Override
