@@ -6,7 +6,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.eclipse.aether.util.listener.ChainedTransferListener;
 import site.stopzero.dev.essentialCommands.EssentialCommands;
 
 public class JoinQuitMessage implements Listener {
@@ -17,14 +16,35 @@ public class JoinQuitMessage implements Listener {
         this.plugin = plugin;
     }
 
+
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        String rawMessage = plugin.getConfig().getString("join-message");
-        String formattedMessage = formatAndColorize(rawMessage, event.getPlayer());
+        Player player = event.getPlayer();
+        String formattedMessage;
+
+        if (!player.hasPlayedBefore()) {
+            String rawMessage = plugin.getConfig().getString("first-join-message");
+            formattedMessage = formatAndColorize(rawMessage, player);
+
+            logToConsole(player, "first-join-log-message");
+
+            if (plugin.getConfig().getBoolean("send-welcome-message-on-first-join", false)) {
+                String privateWelcomeRaw = plugin.getConfig().getString("private-welcome-message");
+                String formattedPrivateMessage = formatAndColorize(privateWelcomeRaw, player);
+
+                if (formattedPrivateMessage != null) player.sendMessage(formattedPrivateMessage);
+            }
+
+        } else {
+
+            String rawMessage = plugin.getConfig().getString("join-message");
+            formattedMessage = formatAndColorize(rawMessage, player);
+
+            logToConsole(player, "join-log-message");
+        }
 
         if (formattedMessage != null) event.setJoinMessage(formattedMessage);
 
-        logToConsole(event.getPlayer(), "join-log-message");
     }
 
     @EventHandler
