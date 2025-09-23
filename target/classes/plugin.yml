@@ -1,0 +1,19 @@
+name: EssentialCommands
+version: '1.0.0'
+main: site.stopzero.dev.essentialCommands.EssentialCommands
+api-version: '1.20'
+
+commands:
+  추방:
+    description: 플레이어를 서버에서 추방합니다.
+    usage: /추방 <플레이어> [사유]
+    permission: ec.kick
+    aliases:
+      - kick
+
+  밴:
+    description: 플레이어를 서버에서 영구적으로 차단합니다.
+    usage: /밴 <플레이어> [사유]
+    permission: ec.ban
+    aliases:
+      - ban
