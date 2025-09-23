@@ -7,11 +7,21 @@ import site.stopzero.dev.essentialCommands.listeners.JoinQuitMessage;
 public final class EssentialCommands extends JavaPlugin {
 
     @Override
-    public void onEnable() {
-
+    public void onLoad() {
         saveDefaultConfig();
 
-        getLogger().info("동명타이쿤 EssentialCommands 플러그인이 정상적으로 켜졌습니다.");
+        String loadMessage = "[ " + getConfig().getString("server-name", "EC")
+                + " ] EssentialCommands 플러그인이 로딩중입니다...";
+        getLogger().info(loadMessage);
+    }
+
+    @Override
+    public void onEnable() {
+
+        String enableMessage = "[ " + getConfig().getString("server-name", "EC")
+                + " ] EssentialCommands 플러그인이 정상적으로 켜졌습니다.";
+        getLogger().info(enableMessage);
+
 
         getServer().getPluginManager().registerEvents(new JoinQuitMessage(this), this);
 
@@ -21,6 +31,8 @@ public final class EssentialCommands extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        getLogger().info("동명타이쿤 EssentialCommands 플러그인이 비활성화 되었습니다.");
+        String disableMessage = "[ " + getConfig().getString("server-name", "EC")
+                + " ] EssentialCommands 플러그인이 비활성화 되었습니다.";
+        getLogger().info(disableMessage);
     }
 }

@@ -19,6 +19,16 @@ commands:
       - 벤
       - ban
 
+  기간밴:
+    description: 플레이어를 지정된 기간 동안 차단합니다.
+    usage: /기간밴 <플레이어> <기간> [사유]
+    permission: ec.tempban
+    aliases:
+      - 기간벤
+      - 임시밴
+      - 임시벤
+      - tempban
+
   밴해제:
     description: 영구적으로 차단된 플레이어를 차단 해제합니다.
     usage: /밴해제 <플레이어>
