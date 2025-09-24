@@ -3,7 +3,6 @@ package site.stopzero.dev.essentialCommands.commands;
 import org.bukkit.BanList;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -45,7 +44,6 @@ public class PunishmentCommands implements CommandExecutor {
         return false;
     }
 
-    // [유지] 이 메서드들은 계속 사용되므로 변경 없음
     private boolean checkPermission(CommandSender sender, String permission) {
         if (!sender.hasPermission(permission)) {
             sender.sendMessage(ChatColor.RED + "이 명령어를 사용할 권한이 없습니다.");
@@ -74,6 +72,25 @@ public class PunishmentCommands implements CommandExecutor {
 
         return target;
     }
+
+    // 플레이어가 이미 밴 상태인지
+    private boolean isAlreadyBanned(CommandSender sender, String playerName) {
+        if (Bukkit.getBanList(BanList.Type.NAME).isBanned(playerName)) {
+            sender.sendMessage(ChatColor.RED + playerName + " 님은 이미 밴 상태입니다.");
+            return true;
+        }
+        return false;
+    }
+
+    // 플레이어가 밴 상태가 아닌지
+    private boolean isNotBanned(CommandSender sender, String playerName) {
+        if (!Bukkit.getBanList(BanList.Type.NAME).isBanned(playerName)) {
+            sender.sendMessage(ChatColor.RED + playerName + " 님은 밴 상태가 아닙니다.");
+            return true;
+        }
+        return false;
+    }
+
 
     private long parseDuration(CommandSender sender, String durationString) {
         try {
@@ -111,7 +128,6 @@ public class PunishmentCommands implements CommandExecutor {
         }
     }
 
-    // [유지] 추방(kick)은 온라인 플레이어 대상이므로 로직 변경 없음
     private boolean handleKickCommand(CommandSender sender, String[] args) {
         if (!checkPermission(sender, "ec.kick")) {
             return true;
@@ -137,7 +153,6 @@ public class PunishmentCommands implements CommandExecutor {
         return true;
     }
 
-    // [변경] handleBanCommand - UUID 기반 비동기 처리로 변경
     private boolean handleBanCommand(CommandSender sender, String [] args) {
         if (!checkPermission(sender, "ec.ban")) {
             return true;
@@ -149,40 +164,27 @@ public class PunishmentCommands implements CommandExecutor {
         }
 
         String targetName = args[0];
+
+        if (isAlreadyBanned(sender, targetName)) {
+            return true;
+        }
+
         String reason = buildReason(args, 1, "서버 관리자에 의해 차단 되었습니다.");
 
-        // 1. 비동기적으로 플레이어 정보(OfflinePlayer)를 조회
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
+        Bukkit.getBanList(BanList.Type.NAME).addBan(targetName, reason, null, sender.getName());
 
-            // 2. 서버 메인 스레드에서 밴 처리 및 메시지 전송
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                if (!target.hasPlayedBefore() && !target.isOnline()) {
-                    sender.sendMessage(ChatColor.RED + "플레이어 " + targetName + "님의 정보를 찾을 수 없습니다.");
-                    return;
-                }
+        Player targetPlayer = Bukkit.getPlayer(targetName);
+        if (targetPlayer != null) {
+            targetPlayer.kickPlayer(ChatColor.RED
+                    + "관리자에 의해 서버에서 차단되었습니다.\n사유: " + reason);
+        }
 
-                if (target.isBanned()) {
-                    sender.sendMessage(ChatColor.RED + targetName + " 님은 이미 밴 상태입니다.");
-                    return;
-                }
-
-                // 3. PlayerProfile을 사용하여 밴
-                Bukkit.getBanList(BanList.Type.PROFILE).addBan(String.valueOf(target.getPlayerProfile()), reason, null, sender.getName());
-
-                if (target.isOnline()) {
-                    target.getPlayer().kickPlayer(ChatColor.RED + "관리자에 의해 서버에서 차단되었습니다.\n사유: " + reason);
-                }
-
-                Bukkit.broadcastMessage(ChatColor.YELLOW + target.getName() + " 님이 "
-                        + sender.getName() + "님에 의해 서버에서 차단되었습니다. (사유: " + reason + ")");
-            });
-        });
+        Bukkit.broadcastMessage(ChatColor.YELLOW + targetName + " 님이 "
+                + sender.getName() + "님에 의해 서버에서 차단되었습니다. (사유: " + reason + ")");
 
         return true;
     }
 
-    // [변경] handleTempBanCommand - UUID 기반 비동기 처리로 변경
     private boolean handleTempBanCommand(CommandSender sender, String[] args) {
         if (!checkPermission(sender, "ec.tempban")) {
             return true;
@@ -195,6 +197,11 @@ public class PunishmentCommands implements CommandExecutor {
         }
 
         String targetName = args[0];
+
+        if (isAlreadyBanned(sender, targetName)) {
+            return true;
+        }
+
         long durationMillis = parseDuration(sender, args[1]);
         if (durationMillis <= 0) {
             if (durationMillis == 0) {
@@ -206,41 +213,22 @@ public class PunishmentCommands implements CommandExecutor {
         Date expiration = new Date(System.currentTimeMillis() + durationMillis);
         String reason = buildReason(args, 2, "서버 관리자에 의해 임시 차단되었습니다.");
 
-        // 1. 비동기적으로 플레이어 정보 조회
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
+        Bukkit.getBanList(BanList.Type.NAME).addBan(targetName, reason, expiration, sender.getName());
 
-            // 2. 메인 스레드에서 밴 처리
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                if (!target.hasPlayedBefore() && !target.isOnline()) {
-                    sender.sendMessage(ChatColor.RED + "플레이어 " + targetName + "님의 정보를 찾을 수 없습니다.");
-                    return;
-                }
+        Player targetPlayer = Bukkit.getPlayer(targetName);
+        if (targetPlayer != null) {
+            targetPlayer.kickPlayer(ChatColor.RED + "관리자에 의해 서버에서 임시 차단되었습니다.\n"
+                    + "사유: " + reason
+                    + "\n" + "만료: " + expiration);
+        }
 
-                if (target.isBanned()) {
-                    sender.sendMessage(ChatColor.RED + targetName + " 님은 이미 밴 상태입니다.");
-                    return;
-                }
-
-                // 3. PlayerProfile을 사용하여 기간밴
-                Bukkit.getBanList(BanList.Type.PROFILE).addBan(String.valueOf(target.getPlayerProfile()), reason, expiration, sender.getName());
-
-                if (target.isOnline()) {
-                    target.getPlayer().kickPlayer(ChatColor.RED + "관리자에 의해 서버에서 임시 차단되었습니다.\n"
-                            + "사유: " + reason
-                            + "\n" + "만료: " + expiration);
-                }
-
-                Bukkit.broadcastMessage(ChatColor.YELLOW + target.getName() + "님이 "
-                        + sender.getName() + "님에 의해 서버에서 임시 차단되었습니다. (사유: " + reason + ")"
-                        + "\n만료: " + expiration);
-            });
-        });
+        Bukkit.broadcastMessage(ChatColor.YELLOW + targetName + "님이 "
+                + sender.getName() + "님에 의해 서버에서 임시 차단되었습니다. (사유: " + reason + ")"
+                + "\n만료: " + expiration);
 
         return true;
     }
 
-    // [변경] handleUnbanCommand - UUID 기반 비동기 처리로 변경
     private boolean handleUnbanCommand(CommandSender sender, String[] args) {
         if (!checkPermission(sender, "ec.unban")) {
             return true;
@@ -252,30 +240,15 @@ public class PunishmentCommands implements CommandExecutor {
         }
 
         String targetName = args[0];
+        if (isNotBanned(sender, targetName)) {
+            return true;
+        }
 
-        // 1. 비동기적으로 플레이어 정보 조회
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
+        BanList<?> banList = Bukkit.getBanList(BanList.Type.NAME);
+        banList.pardon(targetName);
 
-            // 2. 메인 스레드에서 밴 해제 처리
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                if (!target.hasPlayedBefore() && !target.isOnline()) {
-                    sender.sendMessage(ChatColor.RED + "플레이어 " + targetName + "님의 정보를 찾을 수 없습니다.");
-                    return;
-                }
-
-                if (!target.isBanned()) {
-                    sender.sendMessage(ChatColor.RED + targetName + " 님은 밴 상태가 아닙니다.");
-                    return;
-                }
-
-                // 3. PlayerProfile을 사용하여 밴 해제
-                Bukkit.getBanList(BanList.Type.PROFILE).pardon(String.valueOf(target.getPlayerProfile()));
-
-                sender.sendMessage(ChatColor.GREEN + target.getName() + "님의 밴이 해제되었습니다.");
-                Bukkit.broadcastMessage(ChatColor.YELLOW + sender.getName() + "님이 " + target.getName() + "님의 밴을 해제하였습니다.");
-            });
-        });
+        sender.sendMessage(ChatColor.GREEN + targetName + "님의 밴이 해제되었습니다.");
+        Bukkit.broadcastMessage(ChatColor.YELLOW + sender.getName() + "님이 " + targetName + "님의 밴을 해제하였습니다.");
 
         return true;
     }
