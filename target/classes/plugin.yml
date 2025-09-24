@@ -30,9 +30,31 @@ commands:
       - tempban
 
   밴해제:
-    description: 영구적으로 차단된 플레이어를 차단 해제합니다.
+    description: 풀레이어의 차단을 해제합니다.
     usage: /밴해제 <플레이어>
     permission: ec.unban
     aliases:
-      - 벤해제
       - unban
+      - 벤해제
+
+
+  뮤트:
+    description: 플레이어의 채팅을 영구적으로 차단합니다.
+    usage: /뮤트 <플레이어> [사유]
+    permission: ec.mute
+    aliases:
+      - mute
+
+  시간뮤트:
+    description: 플레이어의 채팅을 일정 기간 동안 차단합니다.
+    usage: /시간뮤트 <플레이어> <기간> [사유]
+    permission: ec.tempmute
+    aliases:
+      - tempmute
+
+  뮤트해제:
+    description: 영구적으로 차단된 플레이어를 차단 해제합니다.
+    usage: /뮤트해제 <플레이어>
+    permission: ec.unmute
+    aliases:
+      - unmute

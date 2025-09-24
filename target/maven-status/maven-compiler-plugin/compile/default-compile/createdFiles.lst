@@ -1,3 +1,8 @@
-site\stopzero\dev\essentialCommands\listeners\JoinQuitMessage.class
+site\stopzero\dev\essentialCommands\commands\MuteCommands.class
+site\stopzero\dev\essentialCommands\listeners\ChatMuteListener.class
+site\stopzero\dev\essentialCommands\managers\MuteManager$Muteinfo.class
 site\stopzero\dev\essentialCommands\listeners\BanMessage.class
+site\stopzero\dev\essentialCommands\managers\MuteManager.class
+site\stopzero\dev\essentialCommands\listeners\JoinQuitMessage.class
+site\stopzero\dev\essentialCommands\managers\DatabaseManager.class
 site\stopzero\dev\essentialCommands\EssentialCommands.class

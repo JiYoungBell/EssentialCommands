@@ -44,28 +44,6 @@ public class PunishmentCommands implements CommandExecutor {
         return false;
     }
 
-    /**
-     *
-     * @return target 명령어 대상 플레이어
-     * @param sender 명령어 실행 주체
-     * @param reason 사유
-     * @return 포맷팅된 메세지
-     *
-     */
-    private String getFormattedMessage(String path, CommandSender sender, OfflinePlayer target, String reason) {
-        String message = plugin.getConfig().getString(path);
-
-        if (message == null || message.isEmpty()) {
-            return null;
-        }
-
-        if (target != null) message = message.replace("%player%", target.getName());
-        if (reason != null) message = message.replace("%reason%", reason);
-        message = message.replace("%sender%", sender.getName());
-
-        return ChatColor.translateAlternateColorCodes('&', message);
-    }
-
 
     private boolean checkPermission(CommandSender sender, String permission) {
         if (!sender.hasPermission(permission)) {
@@ -164,11 +142,11 @@ public class PunishmentCommands implements CommandExecutor {
         }
 
         String reason = buildReason(args, 1, "관리자에 의해 추방되었습니다.");
-        String kickMessage = ChatColor.RED + "서버에서 추방 되었습니다!\n사유:" + reason + ")";
+        String kickMessage = ChatColor.RED + "서버에서 추방 되었습니다!\n사유:" + reason;
 
         target.kickPlayer(kickMessage);
 
-        String broadcastMessage = getFormattedMessage("punishments.kick-broadcast-message", sender, target, reason);
+        String broadcastMessage = plugin.getFormattedMessage("punishments.kick-broadcast-message", sender, target, reason);
         if (broadcastMessage != null) Bukkit.broadcastMessage(broadcastMessage);
 
         return true;
@@ -207,7 +185,7 @@ public class PunishmentCommands implements CommandExecutor {
             }
         }
 
-        String broadcastMessage = getFormattedMessage("punishments.ban-broadcast-message", sender, target, reason);
+        String broadcastMessage = plugin.getFormattedMessage("punishments.ban-broadcast-message", sender, target, reason);
         if (broadcastMessage != null) Bukkit.broadcastMessage(broadcastMessage);
 
         return true;
@@ -257,7 +235,7 @@ public class PunishmentCommands implements CommandExecutor {
             }
         }
 
-        String broadcastMessage = getFormattedMessage("punishments.tempban-broadcast-message", sender, target, reason);
+        String broadcastMessage = plugin.getFormattedMessage("punishments.tempban-broadcast-message", sender, target, reason);
         if (broadcastMessage != null)
             Bukkit.broadcastMessage(broadcastMessage + ChatColor.GRAY + " 만료: " + expiration);
 
@@ -290,7 +268,7 @@ public class PunishmentCommands implements CommandExecutor {
 
         sender.sendMessage(ChatColor.GREEN + target.getName() + "님의 밴이 해제되었습니다.");
 
-        String broadcastMessage = getFormattedMessage("punishments.unban-broadcast-message", sender, target, null);
+        String broadcastMessage = plugin.getFormattedMessage("punishments.unban-broadcast-message", sender, target, null);
         if (broadcastMessage != null) Bukkit.broadcastMessage(broadcastMessage);
 
         return true;
