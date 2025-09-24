@@ -3,6 +3,7 @@ package site.stopzero.dev.essentialCommands.commands;
 import org.bukkit.BanList;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -20,7 +21,6 @@ public class PunishmentCommands implements CommandExecutor {
     public PunishmentCommands(EssentialCommands plugin) {
         this.plugin = plugin;
     }
-
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, Command command, @NotNull String label, String[] args) {
@@ -67,30 +67,27 @@ public class PunishmentCommands implements CommandExecutor {
         Player target = Bukkit.getPlayer(playerName);
 
         if (target == null) {
-            sender.sendMessage(ChatColor.RED + "플레이어 " + playerName + "님을 찾을 수 없습니다.");
+            sender.sendMessage(ChatColor.RED + "플레이어 " + playerName + "님을 찾을 수 없습니다. (온라인 플레이어만 가능)");
         }
 
         return target;
     }
 
-    // 플레이어가 이미 밴 상태인지
-    private boolean isAlreadyBanned(CommandSender sender, String playerName) {
-        if (Bukkit.getBanList(BanList.Type.NAME).isBanned(playerName)) {
-            sender.sendMessage(ChatColor.RED + playerName + " 님은 이미 밴 상태입니다.");
+    private boolean isAlreadyBanned(CommandSender sender, OfflinePlayer target) {
+        if (target.isBanned()) {
+            sender.sendMessage(ChatColor.RED + target.getName() + " 님은 이미 밴 상태입니다.");
             return true;
         }
         return false;
     }
 
-    // 플레이어가 밴 상태가 아닌지
-    private boolean isNotBanned(CommandSender sender, String playerName) {
-        if (!Bukkit.getBanList(BanList.Type.NAME).isBanned(playerName)) {
-            sender.sendMessage(ChatColor.RED + playerName + " 님은 밴 상태가 아닙니다.");
+    private boolean isNotBanned(CommandSender sender, OfflinePlayer target) {
+        if (!target.isBanned()) {
+            sender.sendMessage(ChatColor.RED + target.getName() + " 님은 밴 상태가 아닙니다.");
             return true;
         }
         return false;
     }
-
 
     private long parseDuration(CommandSender sender, String durationString) {
         try {
@@ -163,23 +160,30 @@ public class PunishmentCommands implements CommandExecutor {
             return true;
         }
 
-        String targetName = args[0];
+        OfflinePlayer target = Bukkit.getOfflinePlayer(args[0]);
 
-        if (isAlreadyBanned(sender, targetName)) {
+        if (!target.hasPlayedBefore() && !target.isOnline()) {
+            sender.sendMessage(ChatColor.RED + "플레이어 " + args[0] + "님은 서버에 접속한 기록이 없습니다.");
+            return true;
+        }
+
+        if (isAlreadyBanned(sender, target)) {
             return true;
         }
 
         String reason = buildReason(args, 1, "서버 관리자에 의해 차단 되었습니다.");
 
-        Bukkit.getBanList(BanList.Type.NAME).addBan(targetName, reason, null, sender.getName());
+        Bukkit.getBanList(BanList.Type.NAME).addBan(target.getName(), reason, null, sender.getName());
 
-        Player targetPlayer = Bukkit.getPlayer(targetName);
-        if (targetPlayer != null) {
-            targetPlayer.kickPlayer(ChatColor.RED
-                    + "관리자에 의해 서버에서 차단되었습니다.\n사유: " + reason);
+        if (target.isOnline()) {
+            Player onlineTarget = target.getPlayer();
+            if (onlineTarget != null) {
+                onlineTarget.kickPlayer(ChatColor.RED
+                        + "관리자에 의해 서버에서 차단되었습니다.\n사유: " + reason);
+            }
         }
 
-        Bukkit.broadcastMessage(ChatColor.YELLOW + targetName + " 님이 "
+        Bukkit.broadcastMessage(ChatColor.YELLOW + target.getName() + " 님이 "
                 + sender.getName() + "님에 의해 서버에서 차단되었습니다. (사유: " + reason + ")");
 
         return true;
@@ -196,9 +200,14 @@ public class PunishmentCommands implements CommandExecutor {
             return true;
         }
 
-        String targetName = args[0];
+        OfflinePlayer target = Bukkit.getOfflinePlayer(args[0]);
 
-        if (isAlreadyBanned(sender, targetName)) {
+        if (!target.hasPlayedBefore() && !target.isOnline()) {
+            sender.sendMessage(ChatColor.RED + "플레이어 " + args[0] + "님은 서버에 접속한 기록이 없습니다.");
+            return true;
+        }
+
+        if (isAlreadyBanned(sender, target)) {
             return true;
         }
 
@@ -213,16 +222,18 @@ public class PunishmentCommands implements CommandExecutor {
         Date expiration = new Date(System.currentTimeMillis() + durationMillis);
         String reason = buildReason(args, 2, "서버 관리자에 의해 임시 차단되었습니다.");
 
-        Bukkit.getBanList(BanList.Type.NAME).addBan(targetName, reason, expiration, sender.getName());
+        Bukkit.getBanList(BanList.Type.NAME).addBan(target.getName(), reason, expiration, sender.getName());
 
-        Player targetPlayer = Bukkit.getPlayer(targetName);
-        if (targetPlayer != null) {
-            targetPlayer.kickPlayer(ChatColor.RED + "관리자에 의해 서버에서 임시 차단되었습니다.\n"
-                    + "사유: " + reason
-                    + "\n" + "만료: " + expiration);
+        if (target.isOnline()) {
+            Player onlineTarget = target.getPlayer();
+            if (onlineTarget != null) {
+                onlineTarget.kickPlayer(ChatColor.RED + "관리자에 의해 서버에서 임시 차단되었습니다.\n"
+                        + "사유: " + reason
+                        + "\n" + "만료: " + expiration);
+            }
         }
 
-        Bukkit.broadcastMessage(ChatColor.YELLOW + targetName + "님이 "
+        Bukkit.broadcastMessage(ChatColor.YELLOW + target.getName() + "님이 "
                 + sender.getName() + "님에 의해 서버에서 임시 차단되었습니다. (사유: " + reason + ")"
                 + "\n만료: " + expiration);
 
@@ -239,16 +250,22 @@ public class PunishmentCommands implements CommandExecutor {
             return true;
         }
 
-        String targetName = args[0];
-        if (isNotBanned(sender, targetName)) {
+        OfflinePlayer target = Bukkit.getOfflinePlayer(args[0]);
+
+        if (!target.hasPlayedBefore() && !target.isOnline()) {
+            sender.sendMessage(ChatColor.RED + "플레이어 " + args[0] + "님은 서버에 접속한 기록이 없습니다.");
+            return true;
+        }
+
+        if (isNotBanned(sender, target)) {
             return true;
         }
 
         BanList<?> banList = Bukkit.getBanList(BanList.Type.NAME);
-        banList.pardon(targetName);
+        banList.pardon(target.getName());
 
-        sender.sendMessage(ChatColor.GREEN + targetName + "님의 밴이 해제되었습니다.");
-        Bukkit.broadcastMessage(ChatColor.YELLOW + sender.getName() + "님이 " + targetName + "님의 밴을 해제하였습니다.");
+        sender.sendMessage(ChatColor.GREEN + target.getName() + "님의 밴이 해제되었습니다.");
+        Bukkit.broadcastMessage(ChatColor.YELLOW + sender.getName() + "님이 " + target.getName() + "님의 밴을 해제하였습니다.");
 
         return true;
     }

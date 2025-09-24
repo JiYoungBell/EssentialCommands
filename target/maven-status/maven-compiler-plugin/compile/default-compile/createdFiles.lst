@@ -1,2 +1,3 @@
 site\stopzero\dev\essentialCommands\listeners\JoinQuitMessage.class
+site\stopzero\dev\essentialCommands\listeners\BanMessage.class
 site\stopzero\dev\essentialCommands\EssentialCommands.class
