@@ -47,9 +47,10 @@ public class BanMessage implements Listener {
             }
 
             String customKickMessage =
-                    ChatColor.RED + "\n당신은 이 서버에서 차단되었습니다."
-                            + "\n\n" + ChatColor.WHITE + "사유: " + ChatColor.YELLOW + reason
-                            + "\n" + ChatColor.WHITE + "차단 만료일: " + ChatColor.YELLOW + expiration;
+                    ChatColor.RED + "\n\n당신은 이 서버에서 차단되었습니다."
+                            + "\n" + ChatColor.WHITE + "사유: " + ChatColor.YELLOW + reason
+                            + "\n" + ChatColor.WHITE + "차단 만료일: " + ChatColor.YELLOW + expiration
+                            + "\n\n" + ChatColor.WHITE + "문의: " + plugin.getConfig().getString("server-community");
 
             String logMessage = String.format("%s님의 접속시도가 차단되었습니다. (사유: %s, 만료일: %s)"
                     ,event.getPlayer().getName(), reason, expiration);

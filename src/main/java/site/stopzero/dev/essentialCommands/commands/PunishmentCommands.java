@@ -44,6 +44,29 @@ public class PunishmentCommands implements CommandExecutor {
         return false;
     }
 
+    /**
+     *
+     * @return target 명령어 대상 플레이어
+     * @param sender 명령어 실행 주체
+     * @param reason 사유
+     * @return 포맷팅된 메세지
+     *
+     */
+    private String getFormattedMessage(String path, CommandSender sender, OfflinePlayer target, String reason) {
+        String message = plugin.getConfig().getString(path);
+
+        if (message == null || message.isEmpty()) {
+            return null;
+        }
+
+        if (target != null) message = message.replace("%player%", target.getName());
+        if (reason != null) message = message.replace("%reason%", reason);
+        message = message.replace("%sender%", sender.getName());
+
+        return ChatColor.translateAlternateColorCodes('&', message);
+    }
+
+
     private boolean checkPermission(CommandSender sender, String permission) {
         if (!sender.hasPermission(permission)) {
             sender.sendMessage(ChatColor.RED + "이 명령어를 사용할 권한이 없습니다.");
@@ -144,8 +167,9 @@ public class PunishmentCommands implements CommandExecutor {
         String kickMessage = ChatColor.RED + "서버에서 추방 되었습니다!\n사유:" + reason + ")";
 
         target.kickPlayer(kickMessage);
-        Bukkit.broadcastMessage(ChatColor.YELLOW + target.getName() + "님이 "
-                + sender.getName() + "님에 의해 추방되었습니다. (사유: " + reason + ")");
+
+        String broadcastMessage = getFormattedMessage("punishments.kick-broadcast-message", sender, target, reason);
+        if (broadcastMessage != null) Bukkit.broadcastMessage(broadcastMessage);
 
         return true;
     }
@@ -183,8 +207,8 @@ public class PunishmentCommands implements CommandExecutor {
             }
         }
 
-        Bukkit.broadcastMessage(ChatColor.YELLOW + target.getName() + " 님이 "
-                + sender.getName() + "님에 의해 서버에서 차단되었습니다. (사유: " + reason + ")");
+        String broadcastMessage = getFormattedMessage("punishments.ban-broadcast-message", sender, target, reason);
+        if (broadcastMessage != null) Bukkit.broadcastMessage(broadcastMessage);
 
         return true;
     }
@@ -233,9 +257,9 @@ public class PunishmentCommands implements CommandExecutor {
             }
         }
 
-        Bukkit.broadcastMessage(ChatColor.YELLOW + target.getName() + "님이 "
-                + sender.getName() + "님에 의해 서버에서 임시 차단되었습니다. (사유: " + reason + ")"
-                + "\n만료: " + expiration);
+        String broadcastMessage = getFormattedMessage("punishments.tempban-broadcast-message", sender, target, reason);
+        if (broadcastMessage != null)
+            Bukkit.broadcastMessage(broadcastMessage + ChatColor.GRAY + " 만료: " + expiration);
 
         return true;
     }
@@ -265,7 +289,9 @@ public class PunishmentCommands implements CommandExecutor {
         banList.pardon(target.getName());
 
         sender.sendMessage(ChatColor.GREEN + target.getName() + "님의 밴이 해제되었습니다.");
-        Bukkit.broadcastMessage(ChatColor.YELLOW + sender.getName() + "님이 " + target.getName() + "님의 밴을 해제하였습니다.");
+
+        String broadcastMessage = getFormattedMessage("punishments.unban-broadcast-message", sender, target, null);
+        if (broadcastMessage != null) Bukkit.broadcastMessage(broadcastMessage);
 
         return true;
     }
