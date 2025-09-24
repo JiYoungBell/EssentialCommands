@@ -23,13 +23,13 @@ public class JoinQuitMessage implements Listener {
         String formattedMessage;
 
         if (!player.hasPlayedBefore()) {
-            String rawMessage = plugin.getConfig().getString("first-join-message");
+            String rawMessage = plugin.getConfig().getString("join-quit.first-join-message");
             formattedMessage = formatAndColorize(rawMessage, player);
 
-            logToConsole(player, "first-join-log-message");
+            logToConsole(player, "join-quit.first-join-log-message");
 
-            if (plugin.getConfig().getBoolean("send-welcome-message-on-first-join", false)) {
-                String privateWelcomeRaw = plugin.getConfig().getString("private-welcome-message");
+            if (plugin.getConfig().getBoolean("join-quit.send-private-message-on-first-join", false)) {
+                String privateWelcomeRaw = plugin.getConfig().getString("join-quit.private-message-on-first-join");
                 String formattedPrivateMessage = formatAndColorize(privateWelcomeRaw, player);
 
                 if (formattedPrivateMessage != null) player.sendMessage(formattedPrivateMessage);
@@ -37,10 +37,10 @@ public class JoinQuitMessage implements Listener {
 
         } else {
 
-            String rawMessage = plugin.getConfig().getString("join-message");
+            String rawMessage = plugin.getConfig().getString("join-quit.join-message");
             formattedMessage = formatAndColorize(rawMessage, player);
 
-            logToConsole(player, "join-log-message");
+            logToConsole(player, "join-quit.join-log-message");
         }
 
         if (formattedMessage != null) event.setJoinMessage(formattedMessage);
@@ -49,12 +49,12 @@ public class JoinQuitMessage implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        String rawMessage = plugin.getConfig().getString("quit-message");
+        String rawMessage = plugin.getConfig().getString("join-quit.quit-message");
         String formattedMessage = formatAndColorize(rawMessage, event.getPlayer());
 
         if (formattedMessage != null) event.setQuitMessage(formattedMessage);
 
-        logToConsole(event.getPlayer(), "quit-log-message");
+        logToConsole(event.getPlayer(), "join-quit.quit-log-message");
     }
 
 

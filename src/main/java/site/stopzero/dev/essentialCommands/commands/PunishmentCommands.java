@@ -21,189 +21,235 @@ public class PunishmentCommands implements CommandExecutor {
         this.plugin = plugin;
     }
 
+
     @Override
     public boolean onCommand(@NotNull CommandSender sender, Command command, @NotNull String label, String[] args) {
 
         if (command.getName().equalsIgnoreCase("추방")) {
-            if (!sender.hasPermission("ec.kick")) {
-                sender.sendMessage(ChatColor.RED + "이 명령어를 사용할 권한이 없습니다.");
-                return true;
-            }
-
-            if (args.length == 0) {
-                sender.sendMessage(ChatColor.RED + "사용법 : /추방 <플레이어> [사유]");
-                return true;
-            }
-
-            Player target = Bukkit.getPlayer(args[0]);
-            if (target == null) {
-                sender.sendMessage(ChatColor.RED + "플레이어 `" + args[0] + "`을/를 찾을 수 없습니다.");
-                return true;
-            }
-
-            String reason = "관리자에 의해 추방되었습니다.";
-            if (args.length > 1) {
-                StringBuilder reasonBuilder = new StringBuilder();
-                for (int i = 1; i < args.length; i++) {
-                    reasonBuilder.append(args[i]).append(" ");
-                }
-                reason = reasonBuilder.toString().trim();
-            }
-
-            String kickMessage = ChatColor.RED + "서버에서 추방되었습니다!\n사유 : " + reason;
-            target.kickPlayer(kickMessage);
-            Bukkit.broadcastMessage(ChatColor.YELLOW + target.getName() + "님이 "
-                    + sender.getName() + "님에 의해 추방되었습니다. (사유: " + reason + ")");
-
-            return true;
+            return handleKickCommand(sender, args);
         }
 
-
         if (command.getName().equalsIgnoreCase("밴")) {
-            if (!sender.hasPermission("ec.ban")) {
-                sender.sendMessage(ChatColor.RED + "이 명령어를 사용할 권한이 없습니다.");
-                return true;
-            }
-
-            if (args.length == 0) {
-                sender.sendMessage(ChatColor.RED + "사용법 : /밴 <플레이어> [사유]");
-                return true;
-            }
-
-            String targetName = args[0];
-
-            String reason = "서버 관리자에 의해 차단되었습니다.";
-            if (args.length > 1) {
-                StringBuilder reasonBuilder = new StringBuilder();
-                for (int i = 1; i < args.length; i++) {
-                    reasonBuilder.append(args[i]).append(" ");
-                }
-                reason = reasonBuilder.toString().trim();
-            }
-
-            Bukkit.getBanList(BanList.Type.NAME).addBan(targetName, reason, null, sender.getName());
-
-            Player targetPlayer = Bukkit.getPlayer(targetName);
-            if (targetPlayer != null) {
-                targetPlayer.kickPlayer(ChatColor.RED
-                        + "관리자에 의해 서버에서 차단되었습니다.\n사유: " + reason);
-            }
-
-            Bukkit.broadcastMessage(ChatColor.YELLOW + targetName + " 님이 "
-                    + sender.getName() + "님에 의해 서버에서 차단되었습니다. (사유: " + reason + ")");
-
-            return true;
+            return handleBanCommand(sender, args);
         }
 
         if (command.getName().equalsIgnoreCase("기간밴")) {
-            if (!sender.hasPermission("ec.tempban")) {
-                sender.sendMessage(ChatColor.RED + "이 명령어를 사용할 권한이 없습니다.");
-                return true;
-            }
-
-            if (args.length < 2) {
-                sender.sendMessage(ChatColor.RED + "사용법 : /기간밴 <플레이어> <시간> [사유]");
-                sender.sendMessage(ChatColor.GRAY + "시간 단위 : 일, 시간, 분, 초. 예시: 7일, 12시간, 30분");
-                return true;
-            }
-
-            String targetName = args[0]; // 플레이어
-            String durationString = args[1]; // 시간 단위, 7일, 12시간 등
-
-            long durationMillis;
-
-            try {
-                String numberString;
-                long value;
-
-                if (durationString.endsWith("일")) {
-                    numberString = durationString.replace("일", "");
-                    value = Long.parseLong(numberString);
-                    durationMillis = TimeUnit.DAYS.toMillis(value);
-
-                } else if (durationString.endsWith("시간")) {
-                    numberString = durationString.replace("시간", "");
-                    value = Long.parseLong(numberString);
-                    durationMillis = TimeUnit.HOURS.toMillis(value);
-
-                } else if (durationString.endsWith("분")) {
-                    numberString = durationString.replace("분", "");
-                    value = Long.parseLong(numberString);
-                    durationMillis = TimeUnit.MINUTES.toMillis(value);
-
-                } else if (durationString.endsWith("초")) {
-                    numberString = durationString.replace("초", "");
-                    value = Long.parseLong(numberString);
-                    durationMillis = TimeUnit.SECONDS.toMillis(value);
-
-
-                } else {
-                    sender.sendMessage(ChatColor.RED + "알 수 없는 시간 단위입니다. (일, 시간, 분, 초)");
-                    return true;
-                }
-
-            } catch (NumberFormatException e) {
-                sender.sendMessage(ChatColor.RED
-                        + "잘못된 시간 형식입니다. 숫자와 단위를 함께 입력해주세요. (예: 7일, 30분");
-                return true;
-            }
-
-            Date expiration = new Date(System.currentTimeMillis() + durationMillis);
-
-            String reason = "서버 관리자에 의해 임시 차단되었습니다.";
-
-            if (args.length > 2) {
-                StringBuilder reasonBuilder = new StringBuilder();
-
-                for (int i = 2; i < args.length; i++) {
-                    reasonBuilder.append(args[i]).append(" ");
-                }
-                reason = reasonBuilder.toString().trim();
-            }
-
-            Bukkit.getBanList(BanList.Type.NAME).addBan(targetName, reason, expiration, sender.getName());
-
-            Player targetPlayer = Bukkit.getPlayer(targetName);
-
-            if (targetPlayer != null) {
-                targetPlayer.kickPlayer(ChatColor.RED + "관리자에 의해 서버에서 임시 차단되었습니다.\n"
-                        + "사유: " + reason
-                        + "\n" + "만료: " + expiration);
-            }
-
-            Bukkit.broadcastMessage(ChatColor.YELLOW + targetName + "님이 "
-                    + sender.getName() + "님에 의해 서버에서 임시 차단되었습니다. (사유: " + reason + ")"
-                    + "\n만료: " + expiration);
-
-            return true;
+            return handleTempBanCommand(sender, args);
         }
 
         if (command.getName().equalsIgnoreCase("밴해제")) {
-            if (!sender.hasPermission("ec.unban")) {
-                sender.sendMessage(ChatColor.RED + "이 명령어를 사용할 권한이 없습니다.");
-                return true;
-            }
-
-            if (args.length == 0) {
-                sender.sendMessage(ChatColor.RED + "사용법 : /밴해제 <플레이어>");
-                return true;
-            }
-
-            String targetName = args[0];
-            BanList<?> banList = Bukkit.getBanList(BanList.Type.NAME);
-
-            if (!banList.isBanned(targetName)) {
-                sender.sendMessage(ChatColor.RED + targetName + " 님은 밴 상태가 아닙니다.");
-                return true;
-            }
-
-            banList.pardon(targetName);
-            sender.sendMessage(ChatColor.GREEN + targetName + "님의 밴이 해제되었습니다.");
-            Bukkit.broadcastMessage(ChatColor.YELLOW + sender.getName() + "님이 " + targetName + "님의 밴을 해제하였습니다.");
-
-            return true;
+            return handleUnbanCommand(sender, args);
         }
 
         return false;
+    }
+
+    private boolean checkPermission(CommandSender sender, String permission) {
+        if (!sender.hasPermission(permission)) {
+            sender.sendMessage(ChatColor.RED + "이 명령어를 사용할 권한이 없습니다.");
+            return false;
+        }
+        return true;
+    }
+
+    private String buildReason(String[] args, int startIndex, String defaultReason) {
+        if (args.length > startIndex) {
+            StringBuilder reasonBuilder = new StringBuilder();
+            for (int i = startIndex; i < args.length; i++) {
+                reasonBuilder.append(args[i]).append(" ");
+            }
+            return reasonBuilder.toString().trim();
+        }
+        return defaultReason;
+    }
+
+    private Player findOnlinePlayer(CommandSender sender, String playerName) {
+        Player target = Bukkit.getPlayer(playerName);
+
+        if (target == null) {
+            sender.sendMessage(ChatColor.RED + "플레이어 " + playerName + "님을 찾을 수 없습니다.");
+        }
+
+        return target;
+    }
+
+    // 플레이어가 이미 밴 상태인지
+    private boolean isAlreadyBanned(CommandSender sender, String playerName) {
+        if (Bukkit.getBanList(BanList.Type.NAME).isBanned(playerName)) {
+            sender.sendMessage(ChatColor.RED + playerName + " 님은 이미 밴 상태입니다.");
+            return true;
+        }
+        return false;
+    }
+
+    // 플레이어가 밴 상태가 아닌지
+    private boolean isNotBanned(CommandSender sender, String playerName) {
+        if (!Bukkit.getBanList(BanList.Type.NAME).isBanned(playerName)) {
+            sender.sendMessage(ChatColor.RED + playerName + " 님은 밴 상태가 아닙니다.");
+            return true;
+        }
+        return false;
+    }
+
+
+    private long parseDuration(CommandSender sender, String durationString) {
+        try {
+            String numberString;
+            long value;
+
+            if (durationString.endsWith("일")) {
+                numberString = durationString.replace("일", "");
+                value = Long.parseLong(numberString);
+                return TimeUnit.DAYS.toMillis(value);
+
+            } else if (durationString.endsWith("시간")) {
+                numberString = durationString.replace("시간", "");
+                value = Long.parseLong(numberString);
+                return TimeUnit.HOURS.toMillis(value);
+
+            } else if (durationString.endsWith("분")) {
+                numberString = durationString.replace("분", "");
+                value = Long.parseLong(numberString);
+                return TimeUnit.MINUTES.toMillis(value);
+
+            } else if (durationString.endsWith("초")) {
+                numberString = durationString.replace("초", "");
+                value = Long.parseLong(numberString);
+                return TimeUnit.SECONDS.toMillis(value);
+
+            } else {
+                sender.sendMessage(ChatColor.RED + "알 수 없는 시간 단위입니다. (일, 시간, 분, 초)");
+                return -1;
+            }
+
+        } catch (NumberFormatException e) {
+            sender.sendMessage(ChatColor.RED + "알 수 없는 시간 단위입니다. (일, 시간, 분, 초)");
+            return -1;
+        }
+    }
+
+    private boolean handleKickCommand(CommandSender sender, String[] args) {
+        if (!checkPermission(sender, "ec.kick")) {
+            return true;
+        }
+
+        if (args.length == 0) {
+            sender.sendMessage(ChatColor.RED + "사용법: /추방 <플레이어> [사유]");
+            return true;
+        }
+
+        Player target = findOnlinePlayer(sender, args[0]);
+        if (target == null) {
+            return true;
+        }
+
+        String reason = buildReason(args, 1, "관리자에 의해 추방되었습니다.");
+        String kickMessage = ChatColor.RED + "서버에서 추방 되었습니다!\n사유:" + reason + ")";
+
+        target.kickPlayer(kickMessage);
+        Bukkit.broadcastMessage(ChatColor.YELLOW + target.getName() + "님이 "
+                + sender.getName() + "님에 의해 추방되었습니다. (사유: " + reason + ")");
+
+        return true;
+    }
+
+    private boolean handleBanCommand(CommandSender sender, String [] args) {
+        if (!checkPermission(sender, "ec.ban")) {
+            return true;
+        }
+
+        if (args.length == 0) {
+            sender.sendMessage(ChatColor.RED + "사용법 : /밴 <플레이어> [사유]");
+            return true;
+        }
+
+        String targetName = args[0];
+
+        if (isAlreadyBanned(sender, targetName)) {
+            return true;
+        }
+
+        String reason = buildReason(args, 1, "서버 관리자에 의해 차단 되었습니다.");
+
+        Bukkit.getBanList(BanList.Type.NAME).addBan(targetName, reason, null, sender.getName());
+
+        Player targetPlayer = Bukkit.getPlayer(targetName);
+        if (targetPlayer != null) {
+            targetPlayer.kickPlayer(ChatColor.RED
+                    + "관리자에 의해 서버에서 차단되었습니다.\n사유: " + reason);
+        }
+
+        Bukkit.broadcastMessage(ChatColor.YELLOW + targetName + " 님이 "
+                + sender.getName() + "님에 의해 서버에서 차단되었습니다. (사유: " + reason + ")");
+
+        return true;
+    }
+
+    private boolean handleTempBanCommand(CommandSender sender, String[] args) {
+        if (!checkPermission(sender, "ec.tempban")) {
+            return true;
+        }
+
+        if (args.length < 2) {
+            sender.sendMessage(ChatColor.RED + "사용법 : /기간밴 <플레이어> <시간> [사유]");
+            sender.sendMessage(ChatColor.GRAY + "시간 단위 : 일, 시간, 분, 초. 예시: 7일, 12시간, 30분");
+            return true;
+        }
+
+        String targetName = args[0];
+
+        if (isAlreadyBanned(sender, targetName)) {
+            return true;
+        }
+
+        long durationMillis = parseDuration(sender, args[1]);
+        if (durationMillis <= 0) {
+            if (durationMillis == 0) {
+                sender.sendMessage("시간 값은 0보다 커야 합니다!");
+            }
+            return true;
+        }
+
+        Date expiration = new Date(System.currentTimeMillis() + durationMillis);
+        String reason = buildReason(args, 2, "서버 관리자에 의해 임시 차단되었습니다.");
+
+        Bukkit.getBanList(BanList.Type.NAME).addBan(targetName, reason, expiration, sender.getName());
+
+        Player targetPlayer = Bukkit.getPlayer(targetName);
+        if (targetPlayer != null) {
+            targetPlayer.kickPlayer(ChatColor.RED + "관리자에 의해 서버에서 임시 차단되었습니다.\n"
+                    + "사유: " + reason
+                    + "\n" + "만료: " + expiration);
+        }
+
+        Bukkit.broadcastMessage(ChatColor.YELLOW + targetName + "님이 "
+                + sender.getName() + "님에 의해 서버에서 임시 차단되었습니다. (사유: " + reason + ")"
+                + "\n만료: " + expiration);
+
+        return true;
+    }
+
+    private boolean handleUnbanCommand(CommandSender sender, String[] args) {
+        if (!checkPermission(sender, "ec.unban")) {
+            return true;
+        }
+
+        if (args.length == 0) {
+            sender.sendMessage(ChatColor.RED + "사용법 : /밴해제 <플레이어>");
+            return true;
+        }
+
+        String targetName = args[0];
+        if (isNotBanned(sender, targetName)) {
+            return true;
+        }
+
+        BanList<?> banList = Bukkit.getBanList(BanList.Type.NAME);
+        banList.pardon(targetName);
+
+        sender.sendMessage(ChatColor.GREEN + targetName + "님의 밴이 해제되었습니다.");
+        Bukkit.broadcastMessage(ChatColor.YELLOW + sender.getName() + "님이 " + targetName + "님의 밴을 해제하였습니다.");
+
+        return true;
     }
 }
