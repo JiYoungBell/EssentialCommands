@@ -251,8 +251,8 @@ public class PunishmentCommands implements CommandExecutor {
         if (target.isOnline()) {
             Player onlineTarget = target.getPlayer();
             if (onlineTarget != null) {
-                onlineTarget.kickPlayer(ChatColor.RED + "관리자에 의해 서버에서 임시 차단되었습니다.\n"
-                        + "사유: " + reason
+                onlineTarget.kickPlayer(ChatColor.RED + "관리자에 의해 서버에서 임시 차단되었습니다."
+                        + "\n\n사유: " + reason
                         + "\n" + "만료: " + expiration);
             }
         }
