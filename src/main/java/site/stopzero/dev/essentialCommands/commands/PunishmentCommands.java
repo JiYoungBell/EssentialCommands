@@ -168,19 +168,41 @@ public class PunishmentCommands implements CommandExecutor {
             if (targetPlayer != null) {
                 targetPlayer.kickPlayer(ChatColor.RED + "관리자에 의해 서버에서 임시 차단되었습니다.\n"
                         + "사유: " + reason
-                        + "\n" + "만료일: " + expiration);
+                        + "\n" + "만료: " + expiration);
             }
 
             Bukkit.broadcastMessage(ChatColor.YELLOW + targetName + "님이 "
-                    + sender.getName() + "님에 의해 서버에서 임시 차단되었습니다. (사유: " + reason + ")");
+                    + sender.getName() + "님에 의해 서버에서 임시 차단되었습니다. (사유: " + reason + ")"
+                    + "\n만료: " + expiration);
 
             return true;
         }
-/*
-        if (command.getName().equalsIgnoreCase("밴해제")) {
 
+        if (command.getName().equalsIgnoreCase("밴해제")) {
+            if (!sender.hasPermission("ec.unban")) {
+                sender.sendMessage(ChatColor.RED + "이 명령어를 사용할 권한이 없습니다.");
+                return true;
+            }
+
+            if (args.length == 0) {
+                sender.sendMessage(ChatColor.RED + "사용법 : /밴해제 <플레이어>");
+                return true;
+            }
+
+            String targetName = args[0];
+            BanList<?> banList = Bukkit.getBanList(BanList.Type.NAME);
+
+            if (!banList.isBanned(targetName)) {
+                sender.sendMessage(ChatColor.RED + targetName + " 님은 밴 상태가 아닙니다.");
+                return true;
+            }
+
+            banList.pardon(targetName);
+            sender.sendMessage(ChatColor.GREEN + targetName + "님의 밴이 해제되었습니다.");
+            Bukkit.broadcastMessage(ChatColor.YELLOW + sender.getName() + "님이 " + targetName + "님의 밴을 해제하였습니다.");
+
+            return true;
         }
-*/
 
         return false;
     }

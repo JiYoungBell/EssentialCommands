@@ -19,7 +19,7 @@ public final class EssentialCommands extends JavaPlugin {
     public void onEnable() {
 
         String enableMessage = "[ " + getConfig().getString("server-name", "EC")
-                + " ] EssentialCommands 플러그인이 정상적으로 켜졌습니다.";
+                + " ] EssentialCommands 플러그인이 정상적으로 활성화 되었습니다.";
         getLogger().info(enableMessage);
 
 
@@ -27,6 +27,8 @@ public final class EssentialCommands extends JavaPlugin {
 
         this.getCommand("추방").setExecutor(new PunishmentCommands(this));
         this.getCommand("밴").setExecutor(new PunishmentCommands(this));
+        this.getCommand("기간밴").setExecutor(new PunishmentCommands(this));
+        this.getCommand("밴해제").setExecutor(new PunishmentCommands(this));
     }
 
     @Override
